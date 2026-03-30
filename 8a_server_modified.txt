@@ -3,7 +3,6 @@ Questo modulo implementa un server Flask per l'analisi delle emozioni.
 Utilizza il pacchetto EmotionDetection per processare il testo e 
 restituire i punteggi emotivi e l'emozione dominante.
 """
-import os
 from flask import Flask, render_template, request
 from EmotionDetection.emotion_detection import emotion_detector
 
@@ -49,7 +48,6 @@ def render_index_page():
     return render_template('index.html')
 
 if __name__ == "__main__":
-    # Legge la porta assegnata da Render, altrimenti usa la 5000
-    port = int(os.environ.get("PORT", 5000))
-    # Avvia l'app con la porta corretta
-    app.run(host="0.0.0.0", port=port)
+    # Avvia il server sulla porta 5000
+    app.run(host="0.0.0.0", port=5000)
+    

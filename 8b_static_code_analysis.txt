@@ -1,0 +1,5 @@
+theia@theiadocker-davideredion:/home/project
+/final_project$ python3 -m pylint ser/final_project$ python3 -m pylint server.py
+
+-------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 9.47/10, +0.53)
