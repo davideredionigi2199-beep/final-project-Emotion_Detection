@@ -1,69 +1,47 @@
 import requests
 import json
+import os # Aggiungiamo os per leggere le variabili sicure
 
 def emotion_detector(text_to_analyze):
-    """
-    Analizza il testo fornito utilizzando l'API Watson Emotion Predict.
-    Gestisce input vuoti e bug di rete restituendo None per tutte le chiavi.
-    """
-    # URL dell'API di Watson Emotion Analysis
-    url = 'https://sn-watson-emotion.p.cloud.ibm.com/v1/watson.runtime.nlp.v1/NlpService/EmotionPredict'
+    if not text_to_analyze or not text_to_analyze.strip():
+        return {
+            'anger': None, 'disgust': None, 'fear': None, 
+            'joy': None, 'sadness': None, 'dominant_emotion': None
+        }
+
+    url = "https://api-inference.huggingface.co/models/j-hartmann/emotion-english-distilroberta-base"
     
-    # Headers richiesti dall'API
-    header = {"grpc-metadata-mm-model-id": "emotion_aggregated-workflow_lang_en_stock"}
+    hf_token = os.environ.get("HF_TOKEN")
+    headers = {"Authorization": f"Bearer {hf_token}"}
     
-    # Payload con il testo da analizzare
-    myobj = { "raw_document": { "text": text_to_analyze } }
+    payload = {"inputs": text_to_analyze}
     
     try:
-        # Invio della richiesta POST
-        response = requests.post(url, json=myobj, headers=header)
+        response = requests.post(url, json=payload, headers=headers)
         
-        # --- GESTIONE ERRORE TASK 7 ---
-        # Se lo status_code è 400 (input vuoto o errato), restituiamo None
-        if response.status_code == 400:
+        if response.status_code != 200:
             return {
-                'anger': None,
-                'disgust': None,
-                'fear': None,
-                'joy': None,
-                'sadness': None,
-                'dominant_emotion': None
+                'anger': None, 'disgust': None, 'fear': None, 
+                'joy': None, 'sadness': None, 'dominant_emotion': None
             }
 
-        # Conversione della risposta in dizionario
-        formatted_response = json.loads(response.text)
+        formatted_response = response.json()
+        predictions = formatted_response[0]
         
-        # Controllo se la risposta contiene i dati previsti
-        if 'emotionPredictions' not in formatted_response or not formatted_response['emotionPredictions']:
-            return {key: None for key in ['anger', 'disgust', 'fear', 'joy', 'sadness', 'dominant_emotion']}
-
-        # Estrazione delle emozioni
-        emotions = formatted_response['emotionPredictions'][0]['emotion']
+        emotion_scores = {'anger': 0.0, 'disgust': 0.0, 'fear': 0.0, 'joy': 0.0, 'sadness': 0.0}
         
-        emotion_scores = {
-            'anger': emotions['anger'],
-            'disgust': emotions['disgust'],
-            'fear': emotions['fear'],
-            'joy': emotions['joy'],
-            'sadness': emotions['sadness']
-        }
-        
-        # Calcolo dell'emozione dominante (quella con il valore più alto)
+        for item in predictions:
+            label = item['label']
+            if label in emotion_scores:
+                emotion_scores[label] = round(item['score'], 4)
+                
         dominant_emotion = max(emotion_scores, key=emotion_scores.get)
-        
-        # Aggiungiamo l'emozione dominante al risultato finale
         emotion_scores['dominant_emotion'] = dominant_emotion
         
         return emotion_scores
 
-    except (requests.exceptions.RequestException, KeyError, IndexError):
-        # In caso di errore di connessione o formato JSON inaspettato
+    except (requests.exceptions.RequestException, KeyError, IndexError, json.JSONDecodeError):
         return {
-            'anger': None,
-            'disgust': None,
-            'fear': None,
-            'joy': None,
-            'sadness': None,
-            'dominant_emotion': None
+            'anger': None, 'disgust': None, 'fear': None, 
+            'joy': None, 'sadness': None, 'dominant_emotion': None
         }
