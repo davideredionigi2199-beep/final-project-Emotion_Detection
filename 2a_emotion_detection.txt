@@ -1,0 +1,27 @@
+import requests
+
+def emotion_detector(text_to_analyze):
+    """
+    Connects to the Watson NLP Emotion Predict service and returns the raw response.
+    
+    Args:
+        text_to_analyze (str): The input text to be processed for emotion detection.
+        
+    Returns:
+        str: The raw text attribute of the response object from the API.
+    """
+    # Define the endpoint URL for the Watson NLP Emotion Prediction service
+    url = 'https://sn-watson-emotion.labs.skills.network/v1/watson.runtime.nlp.v1/NlpService/EmotionPredict'
+    
+    # Set the required headers including the specific BERT model ID for emotions
+    headers = {"grpc-metadata-mm-model-id": "emotion_aggregated-workflow_lang_en_stock"}
+    
+    # Construct the input payload in the required JSON format
+    myobj = { "raw_document": { "text": text_to_analyze } }
+    
+    # Send a POST request to the API with the specified headers and JSON data
+    response = requests.post(url, json=myobj, headers=headers)
+    
+    # Return the raw text attribute of the response as per the project requirements
+    return response.text
+    #terminal output
